@@ -48,7 +48,7 @@ D = Δ · G_num · (G_flat + μ·G_gen + ε·I)⁻¹      ε = ρ · tr(G_flat +
 
 ## Edit anatomy
 
-`edit_anatomy.py` (+ `edit_anatomy_c.py` for the horizontal-detail measure) computes, for each fix and layer, the weight-change size relative to a full revert and the output-change energy tr(D·G·Dᵀ) on solid-colour vs general activations; `build_anatomy.py` draws it. Measure selectivity on the centred Grams: on raw Grams one per-token colour/brightness/modulation direction holds about half the energy and makes any edit look large.
+`edit_anatomy.py` (+ `edit_anatomy_c.py` for the horizontal-detail measure) computes, for each fix and layer, the weight-change size relative to a full revert and the output-change energy tr(D·G·Dᵀ) on solid-colour vs general activations; `build_anatomy.py` draws it. `edit_anatomy_lora.py <tag> <lora>` adds any LoRA (lora_up/down or .diff keys; split q/k/v mapped into fused qkv) as another arm. Measure selectivity on the centred Grams: on raw Grams one per-token colour/brightness/modulation direction holds about half the energy and makes any edit look large.
 
 ## Training (negative result, kept for reproduction)
 

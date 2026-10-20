@@ -113,7 +113,7 @@ At nynxz's sampler settings (CFG 2.5, no SLG/TSR; relative to SFT at the same se
 **Measuring**
 - Vertical-only stripe scores are fooled: several solves rotated the stripe into short diagonals and scored "clean". Use an orientation-free measure on solids and look at the colour view.
 - Means get dragged by the occasional perfectly clean solid (one grey reached −102 dB); medians and worst cases tell the typical story.
-- In every layer about half of the input energy is one direction: each token's overall colour/brightness plus the timestep modulation shift. Any edit touching it looks "big" by raw output-change energy (ρ=10 changes ~1 % of the weights but shows 79 % "output change"). Measure selectivity on row-centred activations.
+- In every layer about half of the input energy is one direction: each token's overall colour/brightness plus the timestep modulation shift. Any edit touching it looks "big" by raw output-change energy (ρ=10 changes ~1 % of the weights but shows 79 % "output change"). Measure selectivity on row-centred activations. On that measure (share of a full revert's output change, solid-colour vs general detail): nynxz's Destripe 24 % vs 16 % (1.5×, out-of-sample), Gram solve ρ=1 76 % vs 55 % (1.4×), ρ=0.1 92 % vs 75 % (1.2×), Kijai 83 % vs 79 % (1.06×), block reverts equal. DeBand Strong reads 83 % vs 43 % (1.9×), but it was fitted to protect exactly that general-detail statistic, so that number is in-sample.
 
 **The Gram solve**
 - Genuinely selective: a plain 55 % blend toward Base over the same layers (a similar-size edit) reaches only −5.6 dB at the same face drift.
