@@ -13,7 +13,8 @@ rows = json.load(open(os.path.join(OUT, "edit_anatomy.json")))
 ARMS = [("solve_rho0.1", "Gram solve ρ=0.1", 1, "solve_mu0_rho0.1_L21-41"),
         ("solve_rho1", "Gram solve ρ=1", 2, "solve_mu0_rho1_L21-41"),
         ("kijai_m1", "Kijai LoRA @ −1", 3, "kijai_m1"),
-        ("kijai_m05", "Kijai LoRA @ −0.5", 7, "kijai_m05"),
+        ("strong", "DeBand Strong @1.0", 7, "strong_full"),
+        ("nynxz", "nynxz Destripe @1.0", 8, "nynxz_1.0"),
         ("revert21", "Exact revert 21–41", 4, "solve_mu0_L21-41"),
         ("revert32", "Quality+ (revert 32–41)", 5, "qualityplus_lora"),
         ("revert37", "DeBand (revert 37–41)", 6, "deband_lora")]
@@ -26,9 +27,11 @@ CKPT = {"solve_rho0.1": "ckpt_rho0.1", "solve_rho1": "ckpt_rho1"}  # saved check
 
 def edit(r, arm, centred=False):
     """The arm's numbers for one linear, or None where it does not edit."""
-    if arm == "kijai_m05":  # half strength: energies x 0.25, alignment x 0.5
-        k = r.get("kijai_m1")
-        return k and {key: v / (2 if key == "dot" else 4) for key, v in k.items()}
+    scaled = {"kijai_m05": ("kijai_m1", 0.5), "nynxz_1.5": ("nynxz", 1.5)}  # LoRA strength s: energies x s^2, alignment x s
+    if arm in scaled:
+        src, f = scaled[arm]
+        k = r.get(src)
+        return k and {key: v * (f if key == "dot" else f * f) for key, v in k.items()}
     if centred and arm in CKPT:
         return r.get(CKPT[arm])
     if arm in RANGES:
@@ -107,7 +110,7 @@ plain = rendered("swap055_L21-41")
 
 # chart 3: per-layer output-change size on solids vs general prompts
 sel = {}
-for key in ("solve_rho0.1", "solve_rho1", "kijai_m1"):
+for key in ("strong", "solve_rho1", "kijai_m1", "nynxz"):
     sel[key] = {"solid": [], "gen": []}
     for L in glayers:
         rs = [by[(L, p)] for p in PROJ]
@@ -117,7 +120,37 @@ for key in ("solve_rho0.1", "solve_rho1", "kijai_m1"):
         sel[key]["solid"].append(ratio(sum(e[f] for e in es if e), sum(r["revert"][f] for r in rs)))
         sel[key]["gen"].append(ratio(sum(e[g] for e in es if e), sum(r["revert"][g] for r in rs)))
 
-data = {"arms": [[k, l, s] for k, l, s, _ in ARMS], "layers": layers, "size": size, "per_matrix": per_matrix,
+# outcome benchmarks: rendered results (scores.jsonl) against weight-change share of the whole Base-SFT change (all 42 layers)
+total = sum(r["revert"]["w2"] for r in rows)
+
+
+def share(key, scale=1.0):
+    if key == "base":
+        return 1.0
+    return scale * scale * sum(e["w2"] for r in rows for e in [edit(r, key)] if e) / total
+
+
+def outcome(arm):
+    rs = [s for (a, _, _), s in scores.items() if a == arm]
+    hf = [s["hf_db"] for s in rs if s.get("hf_db") is not None]
+    af = [s["arcface"] for s in rs if s.get("arcface") is not None]
+    dd = [s["dino_dist"] for s in rs if s.get("dino_dist") is not None]
+    return {"clean": -statistics.median(hf), "clean_mean": -statistics.fmean(hf), "worst": -max(hf), "face": statistics.fmean(af),
+            "dino": statistics.fmean(dd), "n": len(hf)}
+
+
+OUTCOMES = []
+for label, slot, arm, key, scale in [("nynxz Destripe @1.0", 8, "nynxz_1.0", "nynxz", 1.0), ("nynxz Destripe @1.5", 8, "nynxz_1.5", "nynxz", 1.5),
+                                     ("DeBand Strong @1.0", 7, "strong_full", "strong", 1.0), ("DeBand Strong @1.2", 7, "gcsolve_mu0.3_rho0.05_x1.2_L21-41", "strong", 1.2),
+                                     ("Gram solve ρ=0.1", 1, "solve_mu0_rho0.1_L21-41", "solve_rho0.1", 1.0), ("Gram solve ρ=1", 2, "solve_mu0_rho1_L21-41", "solve_rho1", 1.0),
+                                     ("Kijai LoRA @ −1", 3, "kijai_m1", "kijai_m1", 1.0), ("Kijai LoRA @ −0.5", 3, "kijai_m05", "kijai_m1", 0.5),
+                                     ("Exact revert 21–41", 4, "solve_mu0_L21-41", "revert21", 1.0), ("Quality+ (revert 32–41)", 5, "qualityplus_lora", "revert32", 1.0),
+                                     ("DeBand (revert 37–41)", 6, "deband_lora", "revert37", 1.0), ("Base model", 0, "base", "base", 1.0)]:
+    o = outcome(arm)
+    o.update(label=label, slot=slot, share=share(key, scale))
+    OUTCOMES.append(o)
+
+data = {"arms": [[k, l, s] for k, l, s, _ in ARMS], "outcomes": OUTCOMES, "layers": layers, "size": size, "per_matrix": per_matrix,
         "sweep": sweep, "points": points, "plain": plain, "glayers": glayers, "sel": sel, "centred": centred}
 html = open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "anatomy_template.html")).read()
 open(os.path.join(OUT, "edit_anatomy.html"), "w").write(html.replace("__DATA__", json.dumps(data, ensure_ascii=False)))

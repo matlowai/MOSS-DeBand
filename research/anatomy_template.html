@@ -3,11 +3,11 @@
 <title>DeBand Edit Anatomy</title>
 <style>
 :root{--bg:#f6f6f4;--panel:#fff;--ink:#1d1d1f;--ink2:#52514e;--muted:#898781;--grid:#e9e8e3;--axis:#c3c2b7;--line:#dedede;--accent:#2f6fde;--ring:#fff;
- --s1:#2a78d6;--s2:#eb6834;--s3:#1baf7a;--s4:#eda100;--s5:#e87ba4;--s6:#008300;--s7:#6250d6;--ref:#9a9890}
+ --s1:#2a78d6;--s2:#eb6834;--s3:#1baf7a;--s4:#eda100;--s5:#e87ba4;--s6:#008300;--s7:#6250d6;--s8:#e34948;--ref:#9a9890}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#141416;--panel:#1d1d20;--ink:#ececee;--ink2:#c3c2b7;--muted:#898781;--grid:#2c2c2a;--axis:#45454a;--line:#33333a;--accent:#6aa0ff;--ring:#1d1d20;
- --s1:#3987e5;--s2:#d95926;--s3:#199e70;--s4:#c98500;--s5:#d55181;--s6:#008300;--s7:#9085e9;--ref:#6e6d68}}
+ --s1:#3987e5;--s2:#d95926;--s3:#199e70;--s4:#c98500;--s5:#d55181;--s6:#008300;--s7:#9085e9;--s8:#e66767;--ref:#6e6d68}}
 :root[data-theme="dark"]{--bg:#141416;--panel:#1d1d20;--ink:#ececee;--ink2:#c3c2b7;--muted:#898781;--grid:#2c2c2a;--axis:#45454a;--line:#33333a;--accent:#6aa0ff;--ring:#1d1d20;
- --s1:#3987e5;--s2:#d95926;--s3:#199e70;--s4:#c98500;--s5:#d55181;--s6:#008300;--s7:#9085e9;--ref:#6e6d68}
+ --s1:#3987e5;--s2:#d95926;--s3:#199e70;--s4:#c98500;--s5:#d55181;--s6:#008300;--s7:#9085e9;--s8:#e66767;--ref:#6e6d68}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
 main{max-width:1180px;margin:0 auto;padding:16px}
 h1{font-size:20px;margin:0 0 4px}h2{font-size:16px;margin:0 0 2px}.sub{color:var(--ink2);font-size:13px;margin:0 0 10px}
@@ -22,7 +22,7 @@ svg text{font:11px system-ui,sans-serif;fill:var(--muted)}svg text.lab{fill:var(
 .tip{position:absolute;pointer-events:none;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:6px 10px;font-size:12px;box-shadow:0 2px 10px rgba(0,0,0,.15);display:none;min-width:150px;z-index:2}
 .tip .h{color:var(--ink2);margin-bottom:2px}.tip .r{display:flex;align-items:center;gap:6px;white-space:nowrap}.tip .r b{font-variant-numeric:tabular-nums;min-width:42px}
 .tip .r i{display:inline-block;width:12px;height:2px}
-.multi{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}@media (max-width:900px){.multi{grid-template-columns:1fr}}
+.multi{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}@media (max-width:900px){.multi{grid-template-columns:1fr}}
 .multi h3{font-size:13px;margin:0;display:flex;align-items:center;gap:6px}
 .note{color:var(--ink2);font-size:13px}.note p{margin:6px 0}
 details summary{cursor:pointer;font-weight:600}
@@ -39,9 +39,23 @@ details summary{cursor:pointer;font-weight:600}
 </div>
 
 <div class="card">
+<h2>Outcome benchmark: stripe cleanup vs drift on rendered images</h2>
+<p class="sub">What users see. Up = more stripe removed from flat colours (median over 9 solid renders, dB below SFT; Base ≈ 16.6). Right = the faces move further from SFT's (1 − ArcFace similarity over 6 portraits). The line links the fixes nothing else beats on both at once (the Pareto frontier). Every fix is judged on the same renders, so nobody gets a home-field advantage.</p>
+<div class="legend" id="lgA"></div>
+<div class="chart" id="cA"></div>
+</div>
+
+<div class="card">
+<h2>Efficiency: stripe cleanup per amount of SFT undone</h2>
+<p class="sub">Up = stripe removed (as above). Right = how much of SFT's fine-tuning change the fix undoes (share of the whole Base−SFT weight change, all 42 layers, log scale). nynxz's 64 gradient-picked directions sit far to the left: comparable cleanup from about a thousandth of the edit.</p>
+<div class="legend" id="lgB"></div>
+<div class="chart" id="cB"></div>
+</div>
+
+<div class="card">
 <h2>Selectivity: effect on solid colours vs on general prompts (layers 21–41)</h2>
 <div class="legend" id="mode2"></div>
-<p class="sub">How much each fix changes the layers' outputs, as a share of a full revert's change. Up = more change on the activations SFT produces while drawing solid colours (where the stripes are). Right = more change on ordinary prompts (drift). The grey diagonal is a plain scaled revert, which can't tell the two apart; the further above it a fix sits, the more selective it is.</p>
+<p class="sub">How much each fix changes the layers' outputs, as a share of a full revert's change. Up = more change on the activations SFT produces while drawing solid colours (where the stripes are). Right = more change on ordinary prompts (drift). The grey diagonal is a plain scaled revert, which can't tell the two apart; the further above it a fix sits, the more selective it is. Changing a LoRA's strength slides its point along the straight line from the origin (Kijai @ −0.5 is half way to Kijai @ −1; nynxz @1.5 is 1.5× further out than @1.0).</p>
 <div class="legend" id="lg2"></div>
 <div class="chart" id="c2"></div>
 <div class="note" id="n2"></div>
@@ -57,6 +71,7 @@ details summary{cursor:pointer;font-weight:600}
 <h2>How to read this</h2>
 <p><b>Weight size (top chart)</b> shows where a fix acts, not how much it matters: a large change on a direction the model never uses does nothing. The reverts are flat 100% blocks. The Gram solves cover 21–41 but keep only part of each layer's difference. Kijai's LoRA is a rank-512 approximation, so it is partial everywhere and also touches layers 3–4.</p>
 <p><b>Output effect (charts 2–3)</b> weighs the weight change by how often each input direction actually occurs: tr(D·G·Dᵀ), with G the recorded activation statistics. That is the change in each layer's output on real activations, before the later layers react to it. The output energies of the four matrix types are summed, so the large MLP matrices dominate. Only layers 21–41 have recorded activations, so Kijai's layers 3–4 are not counted in charts 2–3.</p>
+<p><b>In-sample caveat:</b> DeBand Strong (and the μ-protected solves) were fitted to keep the general-prompt detail recording (the same row-centred statistics the "general prompts" axis uses) unchanged, so their low drift on that axis is partly by construction. nynxz's Destripe never saw these recordings, so its position is an out-of-sample measurement. The rendered results (compare page) are the fair test: there Strong drifts more than nynxz (faces 0.83 vs 0.94).</p>
 <p><b>Rendered results</b> in the tooltips (solid HF dB vs SFT, ArcFace vs SFT) are single-seed means from the image comparison, a sanity check on whether the selectivity shows up in pixels.</p>
 </div>
 
@@ -137,11 +152,36 @@ function chart2(){modeButtons();const box=document.getElementById('c2');box.inne
  hit.addEventListener('pointermove',e=>{const rc=svg.getBoundingClientRect(),sx=W/rc.width,x=(e.clientX-rc.left)*sx,y=(e.clientY-rc.top)*sx;let best=null,bd=1e9;for(const t of targets){const d=Math.hypot(t.x-x,t.y-y);if(d<bd){bd=d;best=t;}}if(best&&bd<40)show(best);else{tip.style.display='none';ring.setAttribute('visibility','hidden');}});
  hit.addEventListener('pointerleave',()=>{tip.style.display='none';ring.setAttribute('visibility','hidden');});
  let k=0;hit.addEventListener('focus',()=>show(targets[k]));hit.addEventListener('keydown',e=>{if(e.key==='ArrowRight')show(targets[k=(k+1)%targets.length]);if(e.key==='ArrowLeft')show(targets[k=(k+targets.length-1)%targets.length]);});
- const g=k=>{const p=D.points.find(p=>p.key===k);return {x:px(p),y:py(p)};};const p1=g('solve_rho0.1'),p2=g('solve_rho1'),pk=g('kijai_m1');
+ const g=k=>{const p=D.points.find(p=>p.key===k);return {x:px(p),y:py(p)};};const p1=g('solve_rho0.1'),p2=g('solve_rho1'),pk=g('kijai_m1'),pn=g('nynxz');
  const n=document.getElementById('n2');n.textContent='';const para=document.createElement('p');
- para.textContent=`Gram solve ρ=0.1 changes solid-colour outputs by ${pct(p1.y)} of a full revert while changing general-prompt outputs by ${pct(p1.x)}; ρ=1 is ${pct(p2.y)} vs ${pct(p2.x)}; Kijai's LoRA is ${pct(pk.y)} vs ${pct(pk.x)}. A plain revert would be equal on both.`+(C?'':' Caution: on all activations one direction (each token\'s overall colour/brightness plus the timestep modulation) holds about half the energy, so any edit touching it scores high even when it barely changes stripes; switch to horizontal detail.');n.appendChild(para);}
+ para.textContent=`Gram solve ρ=0.1 changes solid-colour outputs by ${pct(p1.y)} of a full revert while changing general-prompt outputs by ${pct(p1.x)}; ρ=1 is ${pct(p2.y)} vs ${pct(p2.x)}; Kijai's LoRA is ${pct(pk.y)} vs ${pct(pk.x)}; nynxz's Destripe is ${pct(pn.y)} vs ${pct(pn.x)}; DeBand Strong is ${pct(g('strong').y)} vs ${pct(g('strong').x)}. A plain revert would be equal on both.`+(C?'':' Caution: on all activations one direction (each token\'s overall colour/brightness plus the timestep modulation) holds about half the energy, so any edit touching it scores high even when it barely changes stripes; switch to horizontal detail.');n.appendChild(para);}
 
-function chart3(){const box=document.getElementById('c3');box.innerHTML='';const names={'solve_rho0.1':['Gram solve ρ=0.1',1],'solve_rho1':['Gram solve ρ=1',2],'kijai_m1':['Kijai LoRA @ −1',3]};
+// outcome scatter: pts have .label .slot and numeric fields; frontier = upper-left Pareto set (low x, high y)
+function outcomeChart(id,lgId,{x,xLabel,xLog,xMin,xMax,xFmt,frontier}){
+ const box=document.getElementById(id);box.innerHTML='';const pts=D.outcomes.filter(p=>p[x]!=null&&p.clean!=null);
+ const W=box.clientWidth,H=Math.min(460,Math.max(320,W*0.55)),m={l:52,r:16,t:12,b:40},pw=W-m.l-m.r,ph=H-m.t-m.b;
+ const svg=el('svg',{viewBox:`0 0 ${W} ${H}`,height:H},box);const tip=document.createElement('div');tip.className='tip';box.appendChild(tip);
+ const lx=v=>Math.log10(v),X=v=>m.l+(xLog?(lx(v)-lx(xMin))/(lx(xMax)-lx(xMin)):(v-xMin)/(xMax-xMin))*pw;
+ const yMax=Math.ceil(Math.max(...pts.map(p=>p.clean))/5)*5,yMin=Math.min(0,Math.floor(Math.min(...pts.map(p=>p.clean))/5)*5);const Y=v=>m.t+ph-(v-yMin)/(yMax-yMin)*ph;
+ for(let v=yMin;v<=yMax;v+=5){el('line',{x1:m.l,x2:m.l+pw,y1:Y(v),y2:Y(v),stroke:v===0?'var(--axis)':'var(--grid)','stroke-width':1},svg);txt(svg,m.l-6,Y(v)+4,v+' dB',{'text-anchor':'end'});}
+ const ticks=xLog?[0.0005,0.001,0.01,0.1,1].filter(t=>t>=xMin&&t<=xMax):[0,0.1,0.2,0.3,0.4,0.5,0.6].filter(t=>t<=xMax);
+ for(const t of ticks){el('line',{y1:m.t,y2:m.t+ph,x1:X(t),x2:X(t),stroke:'var(--grid)','stroke-width':1},svg);txt(svg,X(t),m.t+ph+16,xFmt(t),{'text-anchor':'middle'});}
+ txt(svg,m.l+pw,H-4,xLabel+' →',{'text-anchor':'end'});txt(svg,0,0,'stripe removed (dB) →',{'text-anchor':'end',transform:`translate(12,${m.t}) rotate(-90)`});
+ if(frontier){const f=[...pts].sort((a,b)=>a[x]-b[x]);const keep=[];let best=-1e9;for(const p of f){if(p.clean>best){keep.push(p);best=p.clean;}}
+  el('path',{d:keep.map((p,i)=>(i?'L':'M')+X(p[x]).toFixed(1)+','+Y(p.clean).toFixed(1)).join(''),fill:'none',stroke:'var(--ink2)','stroke-width':1.5,opacity:0.7},svg);}
+ const targets=pts.map(p=>({p,x:X(p[x]),y:Y(p.clean),color:p.slot?col(p.slot):'var(--ref)'}));
+ for(const t of targets)el('circle',{cx:t.x,cy:t.y,r:5,fill:t.color,stroke:'var(--ring)','stroke-width':2},svg);
+ const boxes=targets.map(t=>({x0:t.x-6,x1:t.x+6,y0:t.y-6,y1:t.y+6}));const hitb=b=>b.x0<m.l||b.x1>m.l+pw+8||b.y0<m.t-4||b.y1>m.t+ph||boxes.some(q=>b.x0<q.x1&&b.x1>q.x0&&b.y0<q.y1&&b.y1>q.y0);
+ for(const t of targets){const w=t.p.label.length*6.6;for(const [ax,ay,a] of [[t.x+10,t.y+4,'start'],[t.x-10,t.y+4,'end'],[t.x+8,t.y+20,'start'],[t.x-8,t.y-10,'end'],[t.x+8,t.y-10,'start'],[t.x-8,t.y+20,'end']]){const b={x0:a==='start'?ax:ax-w,x1:a==='start'?ax+w:ax,y0:ay-11,y1:ay+3};if(hitb(b))continue;boxes.push(b);txt(svg,ax,ay,t.p.label,{class:'lab','text-anchor':a});break;}}
+ const seen=new Set();legend(lgId,pts.filter(p=>!seen.has(p.slot)&&seen.add(p.slot)).map(p=>[p.label.replace(/ @.*$/,''),p.slot?col(p.slot):'var(--ref)','dot']).concat(frontier?[['Pareto frontier','var(--ink2)','line']]:[]));
+ const hit=el('rect',{x:m.l,y:m.t,width:pw,height:ph,fill:'transparent',tabindex:0},svg);const ring=el('circle',{r:8,fill:'none',stroke:'var(--ink)','stroke-width':1.5,visibility:'hidden'},svg);
+ const show=t=>{ring.setAttribute('cx',t.x);ring.setAttribute('cy',t.y);ring.setAttribute('visibility','visible');const p=t.p;
+  tipRows(tip,p.label,[[t.color,p.clean.toFixed(1)+' dB','stripe removed, median (mean '+p.clean_mean.toFixed(1)+', worst '+p.worst.toFixed(1)+')'],[t.color,p.face.toFixed(2),'face similarity to SFT'],[t.color,p.dino.toFixed(3),'DINO distance'],[t.color,(p.share*100<1?(p.share*100).toFixed(2):(p.share*100).toFixed(1))+'%','of SFT\'s change undone'],[t.color,String(p.n),'solid renders']]);placeTip(tip,box,t.x,t.y);};
+ hit.addEventListener('pointermove',e=>{const rc=svg.getBoundingClientRect(),sx=W/rc.width,px=(e.clientX-rc.left)*sx,py=(e.clientY-rc.top)*sx;let b=null,bd=1e9;for(const t of targets){const d=Math.hypot(t.x-px,t.y-py);if(d<bd){bd=d;b=t;}}if(b&&bd<40)show(b);else{tip.style.display='none';ring.setAttribute('visibility','hidden');}});
+ hit.addEventListener('pointerleave',()=>{tip.style.display='none';ring.setAttribute('visibility','hidden');});
+ let k=0;hit.addEventListener('focus',()=>show(targets[k]));hit.addEventListener('keydown',e=>{if(e.key==='ArrowRight')show(targets[k=(k+1)%targets.length]);if(e.key==='ArrowLeft')show(targets[k=(k+targets.length-1)%targets.length]);});}
+
+function chart3(){const box=document.getElementById('c3');box.innerHTML='';const names={'strong':['DeBand Strong @1.0',7],'solve_rho1':['Gram solve ρ=1',2],'kijai_m1':['Kijai LoRA @ −1',3],'nynxz':['nynxz Destripe @1.0',8]};
  for(const key of Object.keys(D.sel)){const wrap=document.createElement('div');const h=document.createElement('h3');const i=document.createElement('i');i.style.cssText=`display:inline-block;width:16px;height:2px;background:${col(names[key][1])}`;h.append(i,document.createTextNode(names[key][0]));wrap.appendChild(h);
   const c=document.createElement('div');c.className='chart';wrap.appendChild(c);box.appendChild(wrap);
   const s=D.sel[key];const yMax=Math.max(1,...s.solid,...s.gen)*1.05;
@@ -155,6 +195,10 @@ function table(){const t=document.getElementById('tbl');const tb=document.create
  for(const p of [...D.points.map(p=>({...p,name:p.label})),...D.sweep.map(p=>({...p,name:'Gram solve ρ='+p.rho}))]){const r=tb2.insertRow();r.insertCell().textContent=p.name;r.insertCell().textContent=pct(p.y);r.insertCell().textContent=pct(p.x);r.insertCell().textContent=pct(p.w);
   r.insertCell().textContent=p.rendered&&p.rendered.hf!=null?p.rendered.hf.toFixed(1):'–';r.insertCell().textContent=p.rendered&&p.rendered.arc!=null?p.rendered.arc.toFixed(2):'–';}
  t.append(tb2,h2,tb);t.insertBefore(h2,tb2);const h1=document.createElement('h3');h1.textContent='Weight change per layer (share of full revert)';t.insertBefore(h1,tb);}
-function all(){chart1();chart2();chart3();}
+function all(){chart1();
+ for(const o of D.outcomes)o.drift=1-o.face;
+ outcomeChart('cA','lgA',{x:'drift',xLabel:'face change vs SFT (1 − ArcFace)',xMin:0,xMax:0.6,xFmt:t=>t.toFixed(1),frontier:true});
+ outcomeChart('cB','lgB',{x:'share',xLabel:"share of SFT's weight change undone (log)",xLog:true,xMin:0.0005,xMax:1,xFmt:t=>(t*100>=1?(t*100).toFixed(0):(t*100).toString())+'%'});
+ chart2();chart3();}
 table();all();let rt;window.addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(all,150);});
 </script></body></html>
