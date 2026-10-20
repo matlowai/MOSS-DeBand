@@ -1,0 +1,40 @@
+[
+ {"id": "goose", "tests": "Original bench: busy scene, signage text, continuity with earlier results",
+  "prompt": "A blurry, crooked photograph of a goose standing on a supermarket checkout conveyor belt holding a single loaf of bread in its beak, staring dead at the camera with menacing intensity, while the cashier and a long line of shoppers behind freeze in silence. A sign above the register reads \"EXPRESS LANE: 10 ITEMS OR LESS\". Overhead fluorescent lighting, harsh shadows, cheap phone camera noise."},
+
+ {"id": "studio_portrait", "tests": "Skin, hair detail, and a big flat seamless backdrop (banding magnet)",
+  "prompt": "A studio portrait photograph of a woman in her thirties with short silver hair and freckles, wearing a charcoal wool turtleneck, seated against a plain warm-grey seamless paper backdrop that fills most of the frame. Soft single key light from the upper left with a large octabox, gentle falloff into shadow on the right side of her face. Shot on a medium format camera, 80mm lens, shallow depth of field, natural skin texture, calm direct gaze into the lens."},
+
+ {"id": "white_interior", "tests": "Flat white walls and soft light gradients",
+  "prompt": "An architectural interior photograph of a minimalist living room with smooth white plaster walls, a pale oak floor and a single low linen sofa. Late afternoon sunlight enters through a tall window on the left and casts a long soft-edged rectangle of light across the wall and floor. Large areas of empty wall, quiet and calm, neutral colors, wide angle lens, straight verticals, high dynamic range."},
+
+ {"id": "fjord_sky", "tests": "Large smooth sky gradient and still water reflections",
+  "prompt": "A landscape photograph of a Norwegian fjord at blue hour, the sky a smooth gradient from deep indigo at the top to pale peach just above the mountains. Snow-capped dark mountains line both sides, and the perfectly still water mirrors the sky and peaks. A single small red wooden cabin with a lit window sits on the right shore. Long exposure, no clouds, crisp and quiet."},
+
+ {"id": "fog_forest", "tests": "Low-contrast haze, subtle tonal gradients",
+  "prompt": "A photograph of a dense pine forest in thick morning fog, rows of tall trunks fading from sharp dark silhouettes in the foreground to pale grey shapes in the distance. Soft diffuse light, almost monochrome blue-grey tones with a faint warm glow where the sun tries to break through at the top right. A narrow dirt path leads from the bottom center into the fog."},
+
+ {"id": "product_glass", "tests": "Pastel gradient backdrop, glass, caustics, small label text",
+  "prompt": "A luxury product photograph of a faceted glass perfume bottle filled with pale amber liquid, standing on a glossy surface in front of a smooth pastel backdrop that blends from soft lilac at the top to mint green at the bottom. Bright caustic reflections fall on the surface beside it. A small minimalist label on the bottle reads \"NORDLYS\" in thin gold capital letters. Studio lighting, ultra clean, sharp focus."},
+
+ {"id": "poster_text", "tests": "Dense typography and layout, MOSS's text strength",
+  "prompt": "A Swiss-style concert poster with a flat cream background. At the top in large bold black sans-serif letters it reads \"RIDING THE BIFROST\". Below, a large abstract rainbow arc made of thick flat stripes of aqua, teal, tangerine and electric blue. At the bottom left in smaller text: \"LIVE AT THE SKY PLATFORM\" and under it \"FRIDAY 21:00\". At the bottom right a small line reads \"TICKETS AT THE GATE\". Clean grid layout, generous margins, flat print colors."},
+
+ {"id": "mascot_2d", "tests": "Flat 2D color fills, clean line art (project mascot)",
+  "prompt": "A flat 2D vector illustration of a cute kawaii sea serpent mascot named Jormungandr, coiled in a loose loop with its tail in its mouth, with big round sparkly eyes, rosy cheeks and a tiny smile. Hot pink and pastel lavender body with soft mint belly scales drawn as simple flat shapes, bold clean black outlines, no shading gradients. Plain flat pale yellow background, sticker-style character sheet design, centered."},
+
+ {"id": "angel_rave", "tests": "Project hero look: neon night, aurora sky, skin, hair, gold detail",
+  "prompt": "A cinematic photograph of a 21-year-old Scandinavian woman with long wavy blonde hair, dressed as a kawaii angel with a glowing gold halo and large white feathered wings, dancing on a futuristic open-air sky rave platform at night. Behind her, a vivid green and teal aurora ripples across a starry sky. She wears an aqua and teal festival outfit with small gold accents. Electric blue and tangerine stage lights, light haze, joyful expression, 35mm lens, shallow depth of field."},
+
+ {"id": "neon_rain", "tests": "Dark low-key scene, saturated light, gradients in shadow",
+  "prompt": "A night street photograph in a narrow alley in Tokyo during light rain, wet asphalt reflecting pink and cyan neon signs. A lone person with a clear umbrella walks away from the camera in the middle distance. Most of the frame is deep shadow with soft glowing haze around the signs. One vertical sign on the right reads \"喫茶\" in glowing red. Shot on film, slight grain, moody and quiet."},
+
+ {"id": "macro_moss", "tests": "Fine texture and sharpness, to catch detail loss from a fix",
+  "prompt": "An extreme macro photograph of bright green moss on a grey granite stone, covered in tiny dew droplets that each reflect the morning sky. Individual moss leaves and fine hair-like stalks with small brown spore capsules are in sharp focus in the center, falling off into creamy bokeh at the edges. Soft overcast light, rich natural color, incredible detail."},
+
+ {"id": "oil_still_life", "tests": "Painterly style, brushwork, dark background",
+  "prompt": "An oil painting still life in the style of the Dutch Golden Age: a pewter plate with a peeled lemon, a half-filled glass of white wine, a few green grapes and a crumpled white napkin on a dark wooden table, against a deep brown-black background. Dramatic light from the left, visible brushstrokes and glazing, crackled varnish texture, rich warm tones."},
+
+ {"id": "hands_dough", "tests": "Hands and anatomy, flour texture, warm skin",
+  "prompt": "A close-up documentary photograph of an elderly baker's weathered hands kneading a large ball of bread dough on a flour-dusted wooden counter. Flour clings to the knuckles and fingernails, and a fine cloud of flour drifts in the warm side light from a nearby window. A rolling pin and a small bowl of salt sit slightly out of focus in the background. Natural colors, shallow depth of field."}
+]

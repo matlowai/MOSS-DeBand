@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MOSS DeBand Compare</title>
+<style>
+:root{--bg:#f6f6f4;--panel:#fff;--ink:#1d1d1f;--muted:#6b6b70;--line:#dedede;--accent:#2f6fde;--good:#2e7d4f;--bad:#b3402e;--hl:#eef3fd}
+@media (prefers-color-scheme:dark){:root{--bg:#141416;--panel:#1d1d20;--ink:#ececee;--muted:#9a9aa0;--line:#33333a;--accent:#6aa0ff;--good:#6fcf97;--bad:#ff8a73;--hl:#1f2a3d}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 system-ui,sans-serif}
+header{padding:14px 16px 4px}h1{font-size:18px;margin:0 0 2px}.sub{color:var(--muted);font-size:13px}
+.controls{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;padding:10px 16px}
+select,button{font:inherit;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:4px 8px}
+select{max-width:min(100%,340px)}
+button.on{border-color:var(--accent);color:var(--accent)}
+.grid{display:grid;grid-template-columns:repeat(var(--ncol,3),minmax(0,1fr));gap:10px;padding:0 16px 16px}
+@media (max-width:900px){.grid{grid-template-columns:1fr}}
+.col.active{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.col .head{display:flex;gap:6px;align-items:center;margin:0 0 6px}.col .head select{flex:1;min-width:0;font-size:13px}.col .head button{padding:2px 8px}
+a{color:var(--accent)}
+.col{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:8px;min-width:0}
+.col h2{font-size:14px;margin:0 0 6px}
+.view{position:relative;width:100%;overflow:hidden;background:#000;border-radius:6px;cursor:grab;touch-action:none}
+.view canvas{position:absolute;left:0;top:0;transform-origin:0 0;image-rendering:auto}
+.view.drag{cursor:grabbing}
+.stats{font-size:12px;color:var(--muted);margin-top:6px;display:flex;flex-wrap:wrap;gap:4px 12px}
+.stats b{color:var(--ink)}.good{color:var(--good)!important}.bad{color:var(--bad)!important}
+.items{display:flex;flex-wrap:wrap;gap:4px;padding:0 16px 8px}
+.items button{font-size:12px;padding:2px 8px}
+.note{color:var(--muted);font-size:12px;padding:0 16px 16px}
+.board{padding:0 16px 8px;overflow-x:auto}
+table{border-collapse:collapse;font-size:12px;font-variant-numeric:tabular-nums;width:100%;background:var(--panel);border:1px solid var(--line);border-radius:10px}
+th,td{padding:4px 8px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}
+th{color:var(--muted);font-weight:600;cursor:pointer;user-select:none}th:first-child,td:first-child{text-align:left}
+tr.arm{cursor:pointer}tr.arm:hover,tr.sel{background:var(--hl)}
+td.tag{color:var(--accent);font-size:11px}
+.explain{margin:4px 16px 10px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:8px 12px;font-size:13px;max-width:1100px}
+.explain summary{cursor:pointer;font-weight:600}.explain p{margin:6px 0}
+</style></head><body>
+<header><h1>MOSS SFT DeBand: candidate fixes side by side</h1>
+<div class="sub">Generated __WHEN__. Same prompt and seed in every column. Add, remove or change columns freely (your layout is kept in the page link). Drag to pan, wheel or buttons to zoom; all columns move together. Click a leaderboard row to put it in the selected column (outlined); shift-click adds it as a new column. <a href="edit_anatomy.html">What each fix changes inside the model →</a></div></header>
+<details class="explain"><summary>What the arms are (exact revert vs Gram solve, what ρ means)</summary>
+<p><b>Exact revert 21–41</b>: copy MOSS-Image Base's weights into SFT for transformer layers 21–41 (every attention and MLP matrix). It removes the stripes about as well as Base, but it also undoes SFT's fine-tuning in half the network, so faces and style drift a lot (ArcFace ≈ 0.65).</p>
+<p><b>Gram solve</b>: instead of copying Base's weights, each layer gets a weight change D chosen so that its <i>output</i> matches Base only for the kinds of input the layer actually sees while SFT draws a solid colour. Those inputs were recorded from 36 solid-colour SFT renders (the "flat Gram" G). For inputs that look unlike those, the layer keeps SFT's behaviour. Formula: D = (W<sub>Base</sub> − W<sub>SFT</sub>) · G (G + εI)<sup>−1</sup>.</p>
+<p><b>ρ</b> sets ε (ε = ρ × the average eigenvalue of G). It controls how narrow the edit is. ρ → 0 makes D the full Base−SFT difference, the same as the exact revert. Larger ρ keeps only the strongest solid-colour input directions, so the edit gets smaller and the result looks more like SFT: ρ=0.1 keeps most of the revert (cleanest solids, faces ≈ 0.76), ρ=1 keeps less (faces ≈ 0.81, solids only −5 dB), and ρ=10 barely changes anything.</p>
+<p><b>Kijai LoRA @ −1 / −0.5</b>: subtracts Kijai's LoRA (or half of it). It is a rank-512 compressed approximation of the SFT↔Base difference covering layers 3, 4 and 21–41 plus the norms, so even at −1 it is only part of a full revert. It is not the same as our plain revert.</p>
+<p><b>Plain revert ×0.55</b>: the control, our own exact blend W = SFT + 0.55·(Base − SFT) on layers 21–41, using the full difference with no compression. It moves every weight 55% of the way to Base, an edit about as big as ρ=0.1's. It only reaches −5.6 dB at about the same face drift, so the solve really is choosing <i>where</i> to edit, not just editing less.</p>
+<p><b>Centred-only / DC-only solves</b>: the activations are split into two parts. One is each token row's average along the width: the overall colour and brightness, plus the timestep modulation shift ("DC"). The other is the horizontal variation around that average, which is where the stripes live. <i>Centred-only</i> makes the layers match Base on the horizontal variation and keeps SFT on the DC part. <i>DC-only</i> does the reverse. Centred-only does nothing for solids, DC-only gets about −5 dB with faces ≈ 0.86, and the full solve needs both parts together.</p>
+<p><b>Protect general-prompt detail (μ)</b>: the ρ=0.1 solve plus a second term that keeps SFT's behaviour on the horizontal detail of 36 general prompts (faces, texture), with the colour/brightness part removed so it doesn't block the fix. Larger μ protects more. <b>Keep SFT on late-step detail</b>: Base everywhere the ρ=0.1 solve acts, except on horizontal variation in the last ~9 steps, where fine detail forms.</p>
+<p><b>Steps 13–25 only</b>: the ρ=0.1 solve applied only during the last 13 of 25 sampling steps (a ComfyUI hook). <b>Split 21–31 / 32–41</b>: the ρ=0.1 solve on one half of the layers, to see which half fixes solids and which half moves faces. <b>Shipped</b> arms are the HF DeBand LoRA and Quality+ preset.</p>
+</details>
+<div class="board"><table id="board"></table></div>
+<div class="note">Solids: HF colour power vs SFT in dB (orientation-free; lower = cleaner; Base ≈ −25). People: ArcFace identity vs SFT (higher = closer to SFT's face). SSIM / DINO: drift vs SFT on non-solid items. Banding: vertical-only fingerprint on the 768×1024 bench (1.0 = clean). Per-colour values are means over the seeds each arm has (11, and 14 for the main arms); "n" = images. Single images swing by 10–30 dB (one grey can hit −70), so sort by the median, not the mean.</div>
+<div class="controls">
+ <button id="add">+ Add column</button>
+ <label>Seed <select id="seed"></select></label>
+ <span>Zoom <button data-z="0">Fit</button><button data-z="1">1:1</button><button data-z="2">2×</button><button data-z="4">4×</button></span>
+ <button id="cv">Color view (stripes) off</button>
+ <span class="sub">Keys: ←/→ item, 1–4 zoom, C color view</span>
+</div>
+<div class="items" id="items"></div>
+<div class="grid" id="grid"></div>
+<script>
+const S = __S__;
+const ARMS = __ARMS__;
+const BOARD = __BOARD__;
+const ITEMS = ["solid_grey","solid_blue","solid_beige","bench_fjord_sky","bench_fog_forest","p_elder_man_west_african","p_young_woman_east_asian","p_child_boy_black","a_anime_girl_school","x_golden_retriever","x_red_fox_snow","t_cafe_chalkboard","o_kitchen_scene"];
+const $=id=>document.getElementById(id);
+const CHOICES=[['base','Base (MOSS-Image Base)'],['sft','SFT (no fix)'],...ARMS.filter(a=>a[0]!=='base')];
+const label=k=>(CHOICES.find(a=>a[0]===k)||[k,k])[1];
+let item=ITEMS[0], seed=11, zoom=0, ox=0, oy=0, cv=false, W=1024, H=1024, active=1;
+let colArms=['base',ARMS[0][0],'sft'];
+try{const h=new URLSearchParams(location.hash.slice(1));if(h.get('cols'))colArms=h.get('cols').split(',').filter(Boolean);if(h.get('item')&&ITEMS.includes(h.get('item')))item=h.get('item');if(h.get('seed'))seed=+h.get('seed');}catch(e){}
+let cols=[];
+const seeds=[...new Set(Object.values(S).flatMap(o=>Object.keys(o).map(k=>+k.split('__s')[1])))].sort((a,b)=>a-b);
+for(const s of seeds) $('seed').add(new Option(s,s));
+$('items').innerHTML=ITEMS.map(i=>`<button data-i="${i}">${i.replace(/^(solid_|bench_|p_|a_|x_|t_|o_)/,'')}</button>`).join('');
+document.querySelectorAll('#items button').forEach(b=>b.onclick=()=>{item=b.dataset.i;load();});
+function saveHash(){try{history.replaceState(null,'','#cols='+colArms.join(',')+'&item='+item+'&seed='+seed);}catch(e){}}
+function build(){const g=$('grid');g.innerHTML='';g.style.setProperty('--ncol',colArms.length);if(active>=colArms.length)active=colArms.length-1;
+ cols=colArms.map((a,i)=>{const d=document.createElement('div');d.className='col'+(i===active?' active':'');
+  const hd=document.createElement('div');hd.className='head';const sel=document.createElement('select');for(const [k,l] of CHOICES)sel.add(new Option(l,k));sel.value=a;
+  sel.onchange=()=>{colArms[i]=sel.value;active=i;load();};const rm=document.createElement('button');rm.textContent='✕';rm.title='Remove column';rm.disabled=colArms.length<=1;
+  rm.onclick=e=>{e.stopPropagation();colArms.splice(i,1);if(active>=i&&active>0)active--;build();load();};hd.append(sel,rm);
+  const v=document.createElement('div');v.className='view';const c=document.createElement('canvas');v.appendChild(c);const st=document.createElement('div');st.className='stats';
+  d.append(hd,v,st);d.addEventListener('pointerdown',()=>{active=i;document.querySelectorAll('.col').forEach((x,j)=>x.classList.toggle('active',j===i));markBoard();});g.appendChild(d);
+  const col={view:v,cvs:c,img:new Image(),stats:st,sel};attachPan(col);return col;});}
+const IMG = __IMG__;
+function src(a){return IMG.replace('{arm}',a).replace('{item}',item).replace('{seed}',seed);}
+function colorize(ctx,w,h){const d=ctx.getImageData(0,0,w,h),p=d.data;for(let i=0;i<p.length;i+=4){const m=(p[i]+p[i+1]+p[i+2])/3;p[i]=Math.max(0,Math.min(255,(p[i]-m)*8+128));p[i+1]=Math.max(0,Math.min(255,(p[i+1]-m)*8+128));p[i+2]=Math.max(0,Math.min(255,(p[i+2]-m)*8+128));}ctx.putImageData(d,0,0);}
+function draw(c){const ctx=c.cvs.getContext('2d',{willReadFrequently:true});if(!c.img.complete||!c.img.naturalWidth){c.cvs.width=W;c.cvs.height=H;ctx.fillStyle='#333';ctx.fillRect(0,0,W,H);ctx.fillStyle='#aaa';ctx.font='40px system-ui';ctx.fillText('not rendered for this item/seed',40,80);c.view.style.aspectRatio=W+'/'+H;render();return;}W=c.img.naturalWidth;H=c.img.naturalHeight;c.cvs.width=W;c.cvs.height=H;ctx.drawImage(c.img,0,0);if(cv)colorize(ctx,W,H);c.view.style.aspectRatio=W+'/'+H;render();}
+function load(){cols.forEach((c,i)=>{c.sel.value=colArms[i];c.img=new Image();c.img.onload=()=>draw(c);c.img.onerror=()=>draw(c);c.img.src=src(colArms[i]);});stats();
+ document.querySelectorAll('#items button').forEach(b=>b.classList.toggle('on',b.dataset.i===item));$('seed').value=seed;document.querySelectorAll('.col').forEach((x,j)=>x.classList.toggle('active',j===active));markBoard();saveHash();}
+function markBoard(){document.querySelectorAll('tr.arm').forEach(r=>r.classList.toggle('sel',colArms.includes(r.dataset.k)));}
+function scale(){const vw=cols[0].view.clientWidth;return zoom===0?vw/W:zoom;}
+function render(){if(!cols.length)return;const s=scale(),vw=cols[0].view.clientWidth,vh=vw*H/W;ox=Math.min(0,Math.max(vw-W*s,ox));oy=Math.min(0,Math.max(vh-H*s,oy));for(const c of cols){c.cvs.style.transform=`translate(${ox}px,${oy}px) scale(${s})`;}document.querySelectorAll('[data-z]').forEach(b=>b.classList.toggle('on',+b.dataset.z===zoom));}
+function fmt(v,d=2){return v==null?'–':v.toFixed(d)}
+function stats(){const key=`${item}__s${seed}`;
+ cols.forEach((c,i)=>{const a=colArms[i];const r=(S[a]||{})[key]||{};const b=r.band;const cls=b==null?'':(b<=1.25?'good':(b>=1.6?'bad':''));
+  let h=`<span>banding <b class="${cls}">${fmt(b)}</b></span>`;
+  if(a!=='sft'){if(r.hf_db!=null)h+=`<span>HF colour <b class="${r.hf_db<=-10?'good':(r.hf_db>-3?'bad':'')}">${r.hf_db>0?'+':''}${fmt(r.hf_db,1)} dB</b></span>`;
+   if(r.ssim!=null)h+=`<span>SSIM vs SFT <b>${fmt(r.ssim,3)}</b></span>`;if(r.dino_dist!=null)h+=`<span>DINO dist <b>${fmt(r.dino_dist,3)}</b></span>`;if(r.arcface!=null)h+=`<span>ArcFace <b class="${r.arcface<0.75?'bad':'good'}">${fmt(r.arcface,3)}</b></span>`;}
+  c.stats.innerHTML=h;});}
+const COLS=[['label','Arm'],['grey','grey dB'],['blue','blue dB'],['beige','beige dB'],['solid_med','solid median dB'],['solid','solid mean dB'],['solid_worst','worst solid'],['arcface','ArcFace'],['ssim','SSIM'],['dino','DINO dist'],['band','bench banding'],['n','n']];
+let sortKey='solid_med', sortDir=1;
+function board(){const rows=[...BOARD].sort((a,b)=>{const x=a[sortKey],y=b[sortKey];if(x==null)return 1;if(y==null)return -1;return typeof x==='string'?x.localeCompare(y)*sortDir:(x-y)*sortDir;});
+ const cell=(r,k)=>{const v=r[k];if(v==null)return '<td>–</td>';if(k==='label')return `<td>${v}${r.tag?` <span class="tag">${r.tag}</span>`:''}</td>`;
+  if(['grey','blue','beige','solid','solid_med','solid_worst'].includes(k))return `<td class="${v<=-10?'good':(v>-3?'bad':'')}">${v>0?'+':''}${v.toFixed(1)}</td>`;
+  if(k==='arcface')return `<td class="${v<0.75?'bad':(v>=0.85?'good':'')}">${v.toFixed(3)}</td>`;if(k==='n')return `<td>${v}</td>`;return `<td>${v.toFixed(k==='band'?2:3)}</td>`;};
+ $('board').innerHTML='<tr>'+COLS.map(([k,l])=>`<th data-k="${k}">${l}${k===sortKey?(sortDir>0?' ▲':' ▼'):''}</th>`).join('')+'</tr>'+rows.map(r=>`<tr class="arm" data-k="${r.arm}">`+COLS.map(([k])=>cell(r,k)).join('')+'</tr>').join('');
+ document.querySelectorAll('#board th').forEach(th=>th.onclick=()=>{const k=th.dataset.k;sortDir=k===sortKey?-sortDir:(['arcface','ssim'].includes(k)?-1:1);sortKey=k;board();markBoard();});
+ document.querySelectorAll('tr.arm').forEach(tr=>tr.onclick=e=>{if(e.shiftKey){colArms.push(tr.dataset.k);active=colArms.length-1;build();}else colArms[active]=tr.dataset.k;load();});}
+$('add').onclick=()=>{colArms.splice(colArms.length-(colArms[colArms.length-1]==='sft'?1:0),0,colArms[active]||ARMS[0][0]);active=colArms.indexOf('sft')>0?colArms.length-2:colArms.length-1;build();load();};
+$('seed').onchange=e=>{seed=+e.target.value;load();};
+document.querySelectorAll('[data-z]').forEach(b=>b.onclick=()=>{zoom=+b.dataset.z;render();});
+$('cv').onclick=()=>{cv=!cv;$('cv').textContent='Color view (stripes) '+(cv?'on':'off');$('cv').classList.toggle('on',cv);cols.forEach(draw);};
+let drag=null;
+function attachPan(c){c.view.addEventListener('pointerdown',e=>{drag={x:e.clientX,y:e.clientY,ox,oy};c.view.setPointerCapture(e.pointerId);c.view.classList.add('drag');});
+ c.view.addEventListener('pointermove',e=>{if(!drag)return;ox=drag.ox+e.clientX-drag.x;oy=drag.oy+e.clientY-drag.y;render();});
+ c.view.addEventListener('pointerup',()=>{drag=null;c.view.classList.remove('drag');});
+ c.view.addEventListener('wheel',e=>{e.preventDefault();const r=c.view.getBoundingClientRect(),cx=e.clientX-r.left,cy=e.clientY-r.top,s0=scale();const ix=(cx-ox)/s0,iy=(cy-oy)/s0;const ns=Math.min(8,Math.max(cols[0].view.clientWidth/W,s0*(e.deltaY<0?1.25:0.8)));zoom=ns;ox=cx-ix*ns;oy=cy-iy*ns;render();},{passive:false});}
+document.addEventListener('keydown',e=>{if(e.target.tagName==='SELECT')return;const i=ITEMS.indexOf(item);
+ if(e.key==='ArrowRight'){item=ITEMS[(i+1)%ITEMS.length];load();}else if(e.key==='ArrowLeft'){item=ITEMS[(i+ITEMS.length-1)%ITEMS.length];load();}
+ else if('1234'.includes(e.key)){zoom=[0,1,2,4][+e.key-1];render();}else if(e.key==='c'||e.key==='C')$('cv').click();});
+window.addEventListener('resize',render);board();build();load();
+</script></body></html>
